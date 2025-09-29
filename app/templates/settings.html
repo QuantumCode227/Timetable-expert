@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% block title %}Settings — Timetable Expert{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+
+    <h2 class="text-2xl font-semibold mb-4">Settings</h2>
+
+    <!-- Username and email change -->
+    <div class="bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg p-6 mb-6">
+        <h3 class="font-medium mb-3">Profile Settings</h3>
+        <form method="POST" action="{{ url_for('main.settings') }}">
+            {{ (form.hidden_tag() if form is defined else '') | safe }}
+
+            <div class="space-y-4">
+                <div>
+                    {{ (form.username.label(class="block text-sm text-gray-700 dark:text-gray-300 mb-1") if
+                    form is defined else '') | safe }}
+                    {{ (form.username(placeholder= current_user.username, id="username", class="w-full px-3 py-2
+                    rounded-md border
+                    dark:border-gray-600
+                    dark:bg-gray-700") if form is defined
+                    else '<input id=\"username\" name=\"username\" placeholder=\"username\" class=\"w-full px-3 py-2
+                        rounded-md border dark:border-gray-600 dark:bg-gray-700\" />') | safe }}
+                </div>
+                <div>
+                    {{ (form.email.label(class="block text-sm text-gray-700 dark:text-gray-300 mb-1") if
+                    form is defined else '') | safe }}
+                    {{ (form.email(placeholder= current_user.email,id="email", class="w-full px-3 py-2 rounded-md border
+                    dark:border-gray-600
+                    dark:bg-gray-700") if form is defined
+                    else '<input id=\"email\" name=\"email\" placeholder=\"Email\" class=\"w-full px-3 py-2 rounded-md
+                        border dark:border-gray-600 dark:bg-gray-700\" />') | safe }}
+                </div>
+
+                <div class="flex justify-end">
+                    {{ (form.button(type="submit", class="px-4 py-2 rounded-md bg-primary-500 text-white") if
+                    form is defined else '') | replace('Button', 'Update Profile') | safe }}
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Password change -->
+    <div class="bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg p-6 mb-6">
+        <h3 class="font-medium mb-3">Security</h3>
+        <form method="POST" action="{{ url_for('main.settings') }}">
+            {{ (form.hidden_tag() if form is defined else '') | safe }}
+
+            <div class="space-y-4">
+                <div>
+                    {{ (form.current_password.label(class="block text-sm text-gray-700 dark:text-gray-300 mb-1") if
+                    form is defined else '') | safe }}
+                    {{ (form.current_password(id="current_password", class="w-full px-3 py-2 rounded-md border
+                    dark:border-gray-600
+                    dark:bg-gray-700") if form is defined
+                    else '<input id=\"current_password\" name=\"current_password\" placeholder=\"Current Password\"
+                        class=\"w-full px-3 py-2 rounded-md border dark:border-gray-600 dark:bg-gray-700\" />') | safe
+                    }}
+                </div>
+                <div>
+                    {{ (form.new_password.label(class="block text-sm text-gray-700 dark:text-gray-300 mb-1") if
+                    form is defined else '') | safe }}
+                    {{ (form.new_password(id="new_password", class="w-full px-3 py-2 rounded-md border
+                    dark:border-gray-600
+                    dark:bg-gray-700") if form is defined
+                    else '<input id=\"new_password\" name=\"new_password\" placeholder=\"New Password\" class=\"w-full
+                        px-3 py-2 rounded-md border dark:border-gray-600 dark:bg-gray-700\" />') | safe }}
+                </div>
+                <div>
+                    {{ (form.confirm_password.label(class="block text-sm text-gray-700 dark:text-gray-300 mb-1") if
+                    form is defined else '') | safe }}
+                    {{ (form.confirm_password(id="confirm_password", class="w-full px-3 py-2 rounded-md border
+                    dark:border-gray-600
+                    dark:bg-gray-700") if form is defined
+                    else '<input id=\"confirm_password\" name=\"confirm_password\" placeholder=\"Confirm Password\"
+                        class=\"w-full px-3 py-2 rounded-md border dark:border-gray-600 dark:bg-gray-700\" />') | safe
+                    }}
+                </div>
+                <div class="flex justify-end">
+                    {{ (form.button(type="submit", class="px-4 py-2 rounded-md bg-primary-500 text-white") if
+                    form is defined else '') | replace('Button', 'Update Password') | safe }}
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- API Key -->
+    <div class="bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg p-6">
+        <h3 class="font-medium mb-3">Timetable API Key</h3>
+
+        <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Your API key is never shown in full here for security.
+            To change it, enter a new key below and save.</p>
+
+        <div class="mb-4">
+            <label class="text-sm text-gray-600 dark:text-gray-400 block mb-2">Current key</label>
+            <div class="flex items-center gap-3">
+                <code
+                    class="px-3 py-2 rounded-md bg-gray-100 dark:bg-gray-700 text-sm text-gray-800 dark:text-gray-100">
+          {% if current_user.api_key %}
+                <span class="text-gray-500">API key Found. For security purpose it is hidden</span>
+          {% else %}
+            <span class="text-gray-500">Not set</span>
+          {% endif %}
+        </code>
+                <button id="changeKeyBtn" class="px-3 py-1 rounded-md border text-sm">Change / Set</button>
+            </div>
+        </div>
+
+        <form id="apiKeyForm" method="POST" action="{{ url_for('main.settings') }}" class="hidden">
+            {{ (form.hidden_tag() if form is defined else '') | safe }}
+            <div class="mb-4">
+                {{ (form.api_key.label(class="block text-sm text-gray-700 dark:text-gray-300 mb-1") if
+                form is defined else '') | safe }}
+
+                {{ (form.api_key(placeholder="Paste new API key here", autocomplete="off", class="w-full px-3
+                py-2 rounded-md border dark:border-gray-600 dark:bg-gray-700") if form is defined
+                else '<input name=\"api_key\" placeholder=\"Paste new API key here\" class=\"w-full px-3 py-2 rounded-md
+                    border dark:border-gray-600 dark:bg-gray-700\" />') | safe
+                }}
+
+
+                <p class="text-xs text-gray-500 mt-1">We will store it securely — it will not be displayed again.</p>
+            </div>
+
+            <div class="flex gap-2 justify-end">
+                {{ (form.button(type="button", id="cancelKeyBtn", class="px-4 py-2 rounded-md bg-red-500 text-white") if
+                form is defined else '') | replace('Button', 'Cancel') | safe }}
+
+                {{ (form.button(type="submit", class="px-4 py-2 rounded-md bg-primary-500 text-white") if
+                form is defined else '') | replace('Button', 'Save API Key') | safe }}
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const changeBtn = document.getElementById('changeKeyBtn');
+        const apiKeyForm = document.getElementById('apiKeyForm');
+        const cancelBtn = document.getElementById('cancelKeyBtn');
+
+        if (changeBtn && apiKeyForm) {
+            changeBtn.addEventListener('click', () => apiKeyForm.classList.remove('hidden'));
+            cancelBtn.addEventListener('click', () => apiKeyForm.classList.add('hidden'));
+        }
+    });
+</script>
+{% endblock %}

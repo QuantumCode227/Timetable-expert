@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>{% block title %}Timetable Expert{% endblock %}</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="{{ url_for('static', filename='styles.css') }}" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: { extend: { colors: { primary: { 500: '#2563eb' } } } }
+        }
+    </script>
+
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        body {
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Poppins", "Helvetica Neue", Arial;
+        }
+
+        .flash-fade {
+            transition: opacity .28s ease, transform .28s ease;
+        }
+
+        .tgrid td,
+        .tgrid th,
+        table td,
+        table th {
+            padding: 0.45rem 0.6rem;
+            border-collapse: collapse;
+        }
+
+        .times-row-cell,
+        tr.times-row td {
+            white-space: nowrap;
+            text-align: center;
+        }
+
+        .slot-badge {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .slot-badge * {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .table-header-title {
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        #editorOverlay {
+            background: transparent !important;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #editor {
+            max-width: 720px;
+            width: 95%;
+        }
+
+        .table-fixed {
+            table-layout: fixed;
+        }
+
+        .break-cell {
+            background: rgba(250, 204, 21, 0.06);
+            border-color: rgba(250, 204, 21, 0.25);
+        }
+
+        .assembly-cell {
+            background: rgba(99, 102, 241, 0.06);
+            border-color: rgba(99, 102, 241, 0.25);
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        @media (max-width: 900px) {
+
+            table th div,
+            table td div {
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+
+<body class="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+
+    {% if request.endpoint != "auth.login" %}
+    <header class="bg-white dark:bg-gray-800 border-b dark:border-gray-700">
+        <div class="w-full mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+
+                <!-- LEFT: Logo / title -->
+                <div class="flex items-center space-x-4">
+                    <h1 class="text-lg font-semibold flex items-center gap-2">
+                        <span aria-hidden="true">📅</span>
+                        <span class="truncate">
+                            <a href="url_for('main.index')">
+                                {{ (data.raw_meta.name if data is defined and data.raw_meta is defined else "Timetable")
+                                }}
+                            </a>
+                        </span>
+                    </h1>
+                </div>
+
+                <!-- RIGHT: pills + college name + profile -->
+                <div class="flex items-center gap-5">
+
+                    <!-- Profile dropdown / Login -->
+                    <div class="flex items-center">
+                        {% if current_user.is_authenticated %}
+                        <div class="relative">
+                            <button id="profileBtn"
+                                class="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none">
+                                <div
+                                    class="w-8 h-8 rounded-full bg-primary-500 text-white flex items-center justify-center font-medium">
+                                    {{ current_user.username[:1] | upper }}
+                                </div>
+                                <span class="hidden sm:inline text-sm text-gray-700 dark:text-gray-300">
+                                    {{ current_user.username }}
+                                </span>
+                                <svg class="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd"
+                                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 0 010-1.414z"
+                                        clip-rule="evenodd" />
+                                </svg>
+                            </button>
+
+                            <div id="profileMenu"
+                                class="hidden origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none z-30">
+                                <div class="py-1">
+                                    <a href="{{ url_for('main.settings') }}"
+                                        class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">Settings</a>
+                                    <form method="POST" action="{{ url_for('auth.logout') }}">
+                                        <button type="submit"
+                                            class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">Logout</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <a href="{{ url_for('auth.login') }}"
+                            class="px-3 py-2 rounded-md bg-primary-500 text-white text-sm">Login</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    {% endif %}
+
+    <!-- FLASH MESSAGES: centered and limited width -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div id="flash-container" class="max-w-md mx-auto px-4 sm:px-6 lg:px-8 mt-4 space-y-2">
+        {% for category, message in messages %}
+        {# determine alert class cleanly to avoid complex inline dicts #}
+        {% if category == 'success' %}
+        {% set alert_class = 'bg-green-100 text-green-800 border-green-300' %}
+        {% elif category == 'error' or category == 'danger' %}
+        {% set alert_class = 'bg-red-100 text-red-800 border-red-300' %}
+        {% elif category == 'warning' %}
+        {% set alert_class = 'bg-yellow-100 text-yellow-800 border-yellow-300' %}
+        {% elif category == 'info' %}
+        {% set alert_class = 'bg-blue-100 text-blue-800 border-blue-300' %}
+        {% else %}
+        {% set alert_class = 'bg-gray-100 text-gray-800 border-gray-300' %}
+        {% endif %}
+
+        <div class="flash-msg {{ alert_class }} border px-4 py-2 rounded-md text-sm flex justify-between items-start gap-3 flash-fade"
+            role="status">
+            <div class="flex-1 pr-2 break-words">{{ message }}</div>
+            <button type="button" class="close-flash text-gray-600 hover:text-gray-900 ml-2"
+                aria-label="Close">✕</button>
+        </div>
+        {% endfor %}
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const messages = document.querySelectorAll(".flash-msg");
+            messages.forEach((msg) => {
+                const closeBtn = msg.querySelector(".close-flash");
+
+                // Auto dismiss after 5 seconds
+                const t = setTimeout(() => {
+                    msg.style.opacity = "0";
+                    msg.style.transform = "translateY(-6px)";
+                    setTimeout(() => { if (msg && msg.parentNode) msg.parentNode.removeChild(msg); }, 320);
+                }, 5000);
+
+                // Manual dismiss - clear timer and remove
+                closeBtn.addEventListener("click", () => {
+                    clearTimeout(t);
+                    msg.style.opacity = "0";
+                    msg.style.transform = "translateY(-6px)";
+                    setTimeout(() => { if (msg && msg.parentNode) msg.parentNode.removeChild(msg); }, 220);
+                });
+            });
+        });
+    </script>
+    {% endif %}
+    {% endwith %}
+    <!-- END FLASH MESSAGES -->
+
+    <!-- main content -->
+    <main class="py-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const profileBtn = document.getElementById('profileBtn');
+            const profileMenu = document.getElementById('profileMenu');
+            if (profileBtn && profileMenu) {
+                profileBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    profileMenu.classList.toggle('hidden');
+                });
+                document.addEventListener('click', (e) => {
+                    if (!profileMenu.contains(e.target) && e.target !== profileBtn) profileMenu.classList.add('hidden');
+                });
+            }
+        });
+    </script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+
+</html>

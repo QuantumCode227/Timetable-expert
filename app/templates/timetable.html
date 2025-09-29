@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}Timetable - Timetable Expert{% endblock %}
+
+{% block content %}
+<div class="wrap">
+  <header>
+    <div class="controls w-full">
+      <button class="btn active" data-view="classes">Classes</button>
+      <button class="btn" data-view="teachers">Teachers</button>
+      <div style="width:12px"></div>
+      <button class="btn primary bg-emerald-400" id="btnPrint">Print / PDF</button>
+    </div>
+  </header>
+
+  <!-- Dynamic tables will be injected here by JS -->
+  <div id="contentArea"></div>
+</div>
+
+<div id="editorOverlay" class="editor-overlay">
+  <div id="editor" class="editor" role="dialog" aria-modal="true">
+    <h3 id="editorTitle">Edit</h3>
+    <div class="small" id="editorSub" style="color: var(--muted);">Details for the column</div>
+    <div class="row" style="margin-top: 20px;">
+      <div><label for="edName">Name</label><input id="edName" type="text" placeholder="e.g. Break" /></div>
+      <div><label for="edType">Type</label><select id="edType">
+          <option value="break">Break</option>
+          <option value="assembly">Assembly</option>
+          <option value="period">Period</option>
+        </select></div>
+    </div>
+    <div class="row">
+      <div><label for="edStart">Start Time</label><input id="edStart" type="time" /></div>
+      <div><label for="edEnd">End Time</label><input id="edEnd" type="time" /></div>
+    </div>
+    <div style="margin-top:12px"><label for="edAfter">Position (after period #)</label><select id="edAfter"></select>
+    </div>
+    <div class="actions">
+      <button class="btn btn-delete" id="edDelete">Delete</button>
+      <button class="btn" id="edCancel">Cancel</button>
+      <button class="btn primary" id="edSave">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Server data injection -->
+<script>
+  const SERVER_DATA = JSON.parse('{{ data | tojson | safe }}');
+</script>
+
+<!-- html2pdf.js library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+<script>
+  document.getElementById("btnPrint").addEventListener("click", () => {
+    const element = document.getElementById("contentArea"); // tables render here
+
+    const opt = {
+      margin: 0.9,
+      filename: "timetable.pdf",
+      image: { type: "jpeg", quality: 1 },
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: "in", format: "a4", orientation: "landscape" },
+      pagebreak: { mode: ['css', 'legacy'] }
+    };
+
+    html2pdf().set(opt).from(element).save();
+  });
+</script>
+
+<style>
+  /* PDF export ke liye force black & white */
+  #contentArea,
+  #contentArea * {
+    background: white !important;
+    color: black !important;
+    border-color: black !important;
+  }
+
+  /* Har table ek alag page le */
+  #contentArea table {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    page-break-before: auto;
+    page-break-after: always;
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  #contentArea tr,
+  #contentArea td,
+  #contentArea th {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    border: 1px solid black !important;
+    padding: 6px 10px;
+    text-align: center;
+    background: white !important;
+    color: black !important;
+  }
+</style>
+{% endblock %}
