@@ -7,7 +7,6 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(150), nullable=False)
     email = db.Column(db.String(150), unique=True, nullable=False)
     password = db.Column(db.String(400), nullable=False)
-    api_key = db.Column(db.String(1000))
 
     def set_password(self, password):
         self.password = generate_password_hash(password)

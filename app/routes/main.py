@@ -62,13 +62,6 @@ def settings():
                 flash("Incorrect current password.", "error")
                 return redirect(url_for("main.settings"))
             
-        # API key update logic
-
-        if api_key:
-            user.api_key = api_key
-            db.session.commit()
-            flash("API key updated successfully", "success")
-            return redirect(url_for("main.settings"))
 
         if username:
             # Check if entered username is taken by another user
