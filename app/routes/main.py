@@ -33,10 +33,8 @@ def settings():
         api_key = form.api_key.data
 
         user = current_user
-        updated = False  # track if we updated anything
+        updated = False  
 
-        # -------- Password update --------
-        # Only attempt password update if user provided current + new + confirm
         if current_password or new_password or confirm_password:
             # require all three to be present
             if not (current_password and new_password and confirm_password):
@@ -63,17 +61,17 @@ def settings():
             else:
                 flash("Incorrect current password.", "error")
                 return redirect(url_for("main.settings"))
+            
+        # API key update logic
 
-        # -------- API key update --------
         if api_key:
             user.api_key = api_key
             db.session.commit()
             flash("API key updated successfully", "success")
             return redirect(url_for("main.settings"))
 
-        # -------- Username update --------
         if username:
-            # Check if desired username is taken by another user
+            # Check if entered username is taken by another user
             existing = User.query.filter_by(username=username).first()
             if existing and existing.id != user.id:
                 flash("Username already taken.", "warning")
@@ -87,7 +85,7 @@ def settings():
                 flash("No change to username.", "info")
                 return redirect(url_for("main.settings"))
 
-        # -------- Email update --------
+        #  Email update logic
         if email:
             # Basic uniqueness check excluding current user
             existing = User.query.filter_by(email=email).first()
@@ -103,7 +101,6 @@ def settings():
                 flash("No change to email.", "info")
                 return redirect(url_for("main.settings"))
 
-        # If we reach here, nothing was provided to update
         flash("No changes submitted.", "info")
 
     return render_template("settings.html", form=form)
