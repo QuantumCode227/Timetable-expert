@@ -117,7 +117,7 @@
                     <h1 class="text-lg font-semibold flex items-center gap-2">
                         <span aria-hidden="true">📅</span>
                         <span class="truncate">
-                            <a href="url_for('main.index')">
+                            <a href="{{url_for('main.index')}}">
                                 {{ (data.raw_meta.name if data is defined and data.raw_meta is defined else "Timetable")
                                 }}
                             </a>
