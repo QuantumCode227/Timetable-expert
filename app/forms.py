@@ -19,5 +19,4 @@ class SettingsForm(FlaskForm):
     confirm_password = PasswordField(
         "Confirm Password", validators=[Optional(), Length(min=5)]
     )
-    api_key = StringField("New API Key", validators=[Optional(), Length(min=5)])
     button = SubmitField("Button")
